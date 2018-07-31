@@ -6,8 +6,8 @@ describe 'an existing user can login' do
       visit '/'
 
       click_on 'Login'
+      
       fill_in 'Username', with: 'fatherWar'
-      fill_in 'Phone Number', with: '+17196639883'
       click_on 'Login'
 
       expect(current_path).to eq('/users/1')
