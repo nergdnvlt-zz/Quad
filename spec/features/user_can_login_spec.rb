@@ -3,7 +3,7 @@ require 'rails_helper'
 describe 'an existing user can login' do
   describe 'when they enter their username' do
     it 'at /welcome' do
-      visit '/welcome'
+      visit '/'
 
       click_on 'Login'
       fill_in 'Username', with: 'fatherWar'
