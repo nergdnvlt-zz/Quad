@@ -3,24 +3,30 @@ class SessionsController < ApplicationController
 
   def create
     username = params['username']
-    session = SessionService.create_session(username)
+    user_session = SessionService.request(username)
+    if user_session[:session] == true
+      session[:username] = username
+      redirect_to sessions_path
+    else
+      render 404
+    end
+  end
+
+  def index
+    user = UserService.request(session[:username])
+    @user = User.new(user)
     binding.pry
   end
 end
 
-class BaseService
-  def conn
-    Faraday.new('https://machine-ltd.herokuapp.com/api/v1')
-  end
-end
+class UserService < BaseService
 
-class SessionService < BaseService
-
-  def create_session(username)
-    .new(username).parsed_request
+  def self.request(username)
+    new(username).parsed_request
   end
 
   def parsed_request
+    JSON.parse(request.body, symbolize_names: true)
   end
 
   private
@@ -30,8 +36,53 @@ class SessionService < BaseService
   end
 
   def request
-    conn.post do |req|
-      req.url '/sessions'
-      req.body = "{'username': '#{@username}' }"
+    conn.get do |req|
+      req.url "/api/v1/users/#{@username}"
+    end
+  end
+end
+
+
+class User
+  attr_reader :username, :phone_number
+
+  def initialize(attrs)
+    @username = attrs[:username]
+    @phone_number = attrs[:phone_number]
+    @devices = attrs[:devices].map { |device| Devices.new(device) }
+  end
+end
+
+
+class Devices
+  attr_reader :pin_latitude,
+              :pin_longitude,
+              :radius,
+              :alert,
+              :last_location
+
+  def initialize(attrs)
+    @pin_latitude = attrs[:pin_lat]
+    @pin_longitude = attrs[:pin_long]
+    @radius = attrs[:radius]
+    @alert = attrs[:alert]
+    @last_location = LastLocation.new(attrs[:last_location])
+  end
+end
+
+
+class LastLocation
+  attr_reader :id,
+              :location_latitude,
+              :location_longitude,
+              :distance,
+              :time
+              
+  def initialize(attrs)
+    @id = attrs[:id]
+    @location_latitude = attrs[:lat]
+    @location_longitude = attrs[:long]
+    @distance = attrs[:distance]
+    @time = attrs[:timestamp]
   end
 end
